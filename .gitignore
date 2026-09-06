@@ -97,3 +97,6 @@ coverage/
 cppcheck-report.xml
 cppcheck-build/
 .cppcheck/
+
+# Generated compressed man page
+man/*.1.gz
