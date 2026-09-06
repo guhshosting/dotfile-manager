@@ -1,0 +1,6 @@
+#!/bin/sh
+# prerm - nothing to clean up beyond the files dpkg already tracks.
+# dotfile-manager never installs files outside the paths dpkg manages
+# (it never touches user config/state at install/removal time).
+set -e
+exit 0

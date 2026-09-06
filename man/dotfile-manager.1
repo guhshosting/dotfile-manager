@@ -1,0 +1,259 @@
+.TH DOTFILE-MANAGER 1 "September 2026" "dotfile-manager 1.0.0" "User Commands"
+.SH NAME
+dotfile-manager \- safely discover, inventory, compare, back up, and restore dotfiles
+.SH SYNOPSIS
+.B dotfile-manager
+.I command
+.RI [ arguments ]
+.RI [ options ]
+.SH DESCRIPTION
+.B dotfile-manager
+is a Linux command-line utility that keeps a managed copy of chosen
+configuration files (dotfiles) in a store directory, defaulting to
+.IR $HOME/dotfiles ,
+and safely synchronizes them with the real home directory.
+.PP
+It is designed around a small set of hard safety rules rather than
+convenience:
+it never overwrites existing files without
+.B \-\-dry\-run / \-\-force
+semantics; discovery never scans the whole home directory (it is bounded
+to
+.I $HOME
+at depth 1 plus
+.I $HOME/.config
+one level deeper); credential-shaped paths
+(\c
+.IR ~/.ssh ", " ~/.gnupg ", " ~/.aws/credentials ", " ~/.config/gcloud ,
+password stores, cookie databases, tokens) are classified sensitive and
+are never auto-added, read, or printed; management mode (copy vs.
+symlink) is never changed implicitly; and
+.B remove
+never deletes the actual file, only the management record.
+.SH COMMANDS
+.TP
+.B discover
+Read-only scan for candidate dotfiles. Takes no positional arguments and
+rejects
+.B \-\-force
+with a usage error (exit 2).
+.TP
+.BI "list " "[\-\-snapshots]"
+List currently managed entries, or (with
+.BR \-\-snapshots )
+list available snapshots.
+.TP
+.BI "add " path " [options]"
+Add
+.I path
+(relative to
+.IR $HOME )
+to the managed set. Copies the current content into the store and
+records the path, mode, and any tags in the configuration file. Never
+converts the home file into a symlink, even when
+.B \-\-mode symlink
+is given \(em that conversion only happens via an explicit
+.B "apply \-\-force"
+later.
+.TP
+.BI "remove " path " [\-\-purge\-store]"
+Stop managing
+.IR path .
+Does not delete the file at
+.IR path .
+With
+.BR \-\-purge\-store ,
+also deletes the store's copy \(em but refuses on a non-empty directory
+and never performs a recursive delete.
+.TP
+.BI "status " "[paths...]"
+Show the sync status of managed entries: one of
+.BR IN_SYNC ", " MODIFIED ", " MISSING_HOME ", " MISSING_STORE ,
+.BR TYPE_MISMATCH ", " SYMLINK_MISMATCH ", " CONFLICT ", or " UNKNOWN .
+.TP
+.BI "diff " path
+Show differences between the store and home versions of
+.IR path .
+Binary files are reported as differing without content being printed as
+a textual diff.
+.TP
+.BI "backup " "[paths...] [\-\-snapshot]"
+Copy current home content into the store for the given entries (or all
+managed entries). Refuses conflicting changes unless
+.B \-\-force
+is given; always previewable with
+.BR \-\-dry\-run .
+With
+.BR \-\-snapshot ,
+creates a timestamped snapshot of the store before syncing.
+.TP
+.BI "apply " "[paths...]"
+Apply store content out to the home directory for the given entries (or
+all managed entries), including performing the copy\(->symlink
+conversion for entries in symlink mode. Creates a safety backup of any
+existing differing home content before overwriting it. Refuses
+conflicts unless
+.B \-\-force
+is given; always previewable with
+.BR \-\-dry\-run .
+.TP
+.BI "restore \-\-snapshot\-id " "ID|latest " "[paths...]"
+Restore home content from a previously created snapshot.
+.B \-\-snapshot\-id
+is required.
+.TP
+.B check
+Validate the configuration file and all managed paths without changing
+anything.
+.TP
+.B report
+Produce a complete status and check report in one invocation.
+.TP
+.B version
+Print version and license information.
+.SH GLOBAL OPTIONS
+.TP
+.BI "\-\-format " "text|json|markdown"
+Select output format (default: text).
+.TP
+.BI "\-\-output " file
+Write output to
+.I file
+instead of standard output.
+.TP
+.B \-\-verbose
+Include additional detail in output.
+.TP
+.B \-\-quiet
+Suppress non-essential messages.
+.TP
+.B \-\-no\-color
+Disable ANSI color output.
+.TP
+.B \-\-dry\-run
+Preview a mutating operation without changing anything. Only accepted by
+commands that perform mutations.
+.TP
+.B \-\-force
+Allow an explicitly-documented destructive or overwriting operation to
+proceed. Only accepted by commands that perform mutations.
+.TP
+.B \-\-help ", " \-h
+Show usage help.
+.TP
+.B \-\-version
+Show version information.
+.SH ADD OPTIONS
+.TP
+.BI "\-\-mode " "copy|symlink"
+Management mode for the new entry (default: copy). Recorded in the
+configuration; does not itself modify the home file.
+.TP
+.BI "\-\-store\-path " path
+Override the relative path used to store the entry (default: same as
+the home-relative path).
+.TP
+.BI "\-\-tag " name
+Attach a tag to the entry. May be repeated.
+.TP
+.B \-\-allow\-sensitive
+Required to add a path that dotfile-manager classifies as sensitive
+(credential-shaped paths). Without this flag,
+.B add
+refuses such paths.
+.SH EXIT STATUS
+.TP
+.B 0
+Success \(em operation completed, or everything already in sync.
+.TP
+.B 1
+Differences or non-fatal warnings were found.
+.TP
+.B 2
+Command-line usage error.
+.TP
+.B 3
+Configuration error. The configuration file is malformed and is left
+untouched.
+.TP
+.B 4
+Path-safety error (traversal attempt, symlink escape, special file,
+filesystem loop, or similar).
+.TP
+.B 5
+Unresolved conflict; the operation was refused because
+.B \-\-force
+was not given.
+.TP
+.B 6
+I/O failure.
+.TP
+.B 7
+Internal error.
+.SH FILES
+.TP
+.I $XDG_CONFIG_HOME/dotfile-manager/config.json
+(or
+.IR ~/.config/dotfile-manager/config.json )
+Configuration file listing managed entries, the store location, and
+ignore patterns. Never rewritten if malformed.
+.TP
+.I $HOME/dotfiles
+Default store directory holding managed copies of dotfile content.
+.TP
+.I <store>/.dotfile-manager/safety-backups/
+Automatic safety backups of home content, made immediately before any
+overwrite performed by
+.BR apply .
+.SH ENVIRONMENT
+.TP
+.B HOME
+Base of the bounded discovery scan and of all home-relative path
+resolution.
+.TP
+.B XDG_CONFIG_HOME
+Overrides the default configuration directory.
+.TP
+.B XDG_STATE_HOME
+Overrides the default state directory.
+.SH EXAMPLES
+.PP
+Preview what could be managed:
+.RS
+.EX
+dotfile-manager discover
+.EE
+.RE
+.PP
+Start tracking a file and inspect its status:
+.RS
+.EX
+dotfile-manager add .bashrc
+dotfile-manager status
+.EE
+.RE
+.PP
+Preview then perform pulling store content onto a new machine:
+.RS
+.EX
+dotfile-manager apply \-\-dry\-run
+dotfile-manager apply \-\-force
+.EE
+.RE
+.SH LIMITATIONS
+Like other tools that operate on a live filesystem,
+.B dotfile-manager
+does not provide hard time-of-check-to-time-of-use guarantees against a
+concurrently running adversarial process; it minimizes this window by
+never following symlinks blindly and re-verifying immediately before
+mutating, but does not claim atomicity the operating system does not
+provide.
+.SH BUGS
+Report issues at the project's issue tracker.
+.SH AUTHOR
+Reece Labson
+.SH COPYRIGHT
+Copyright \(co 2026 Reece Labson. License: MIT.
+.SH SEE ALSO
+Full documentation: \fIREADME.md\fR and \fIdocs/ARCHITECTURE.md\fR in the
+project source tree.

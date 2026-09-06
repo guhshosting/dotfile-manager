@@ -1,0 +1,99 @@
+# dotfile-manager .gitignore
+# SPDX-License-Identifier: MIT
+
+# ---------------------------------------------------------------------------
+# CMake build directories
+# ---------------------------------------------------------------------------
+/build/
+/build-*/
+/out/
+/cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+Testing/
+compile_commands.json
+install_manifest.txt
+_deps/
+
+# ---------------------------------------------------------------------------
+# Compiled binaries / objects
+# ---------------------------------------------------------------------------
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+/dotfile-manager
+/dfm_unit_tests
+
+# ---------------------------------------------------------------------------
+# Packaging output (build products, not source)
+# ---------------------------------------------------------------------------
+packaging/debian/stage/
+packaging/*.deb
+packaging/*.changes
+packaging/*.buildinfo
+packaging/rpm/*.rpm
+packaging/rpm/*.src.rpm
+/rpmbuild/
+
+# ---------------------------------------------------------------------------
+# Man page derived artifacts (keep the source .1 file; ignore ad hoc renders)
+# ---------------------------------------------------------------------------
+man/*.pdf
+man/*.ps
+man/*.txt.tmp
+
+# ---------------------------------------------------------------------------
+# Clean-room / release verification scratch space
+# ---------------------------------------------------------------------------
+/cleanroom-*/
+/*.tar.gz
+/*.tar.xz
+/dist/
+
+# ---------------------------------------------------------------------------
+# Test / development scratch directories
+# NEVER add real dotfile content here; these are placeholders for the
+# temp/fake-home directories used by manual real-machine validation.
+# ---------------------------------------------------------------------------
+/dotfile-manager-test-home/
+/dotfile-manager-test-store/
+/tmp/
+
+# ---------------------------------------------------------------------------
+# Editor / IDE
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.clangd/
+.cache/
+compile_commands.json
+
+# ---------------------------------------------------------------------------
+# OS cruft
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Coverage / static analysis output
+# ---------------------------------------------------------------------------
+*.gcda
+*.gcno
+*.gcov
+coverage/
+cppcheck-report.xml
+cppcheck-build/
+.cppcheck/

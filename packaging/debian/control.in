@@ -1,0 +1,17 @@
+Package: dotfile-manager
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: @ARCH@
+Installed-Size: @INSTALLED_SIZE@
+Depends: libc6 (>= 2.34), libstdc++6 (>= 12), libgcc-s1
+Maintainer: Reece Labson <reecelabson@gmail.com>
+Homepage: https://github.com/reecelabson/dotfile-manager
+Description: safe CLI utility for discovering, comparing, and backing up dotfiles
+ dotfile-manager discovers, inventories, compares, backs up, and restores
+ configuration files ("dotfiles") between a user's home directory and a
+ managed store directory. It is designed around strict safety defaults:
+ bounded, read-only discovery (never scans the whole home directory or
+ sensitive credential paths); no destructive operation without an explicit
+ --force after a --dry-run preview; no implicit conversion of files into
+ symlinks; and no recursive deletes.
